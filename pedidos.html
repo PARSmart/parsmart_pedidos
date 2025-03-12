@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedido de Productos</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        input { width: 60px; text-align: center; }
+        button { margin-top: 20px; padding: 10px; background-color: green; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h2>Selecciona los productos y cantidades</h2>
+    
+    <form id="pedidoForm">
+        <table>
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                </tr>
+            </thead>
+            <tbody id="productosLista"></tbody>
+        </table>
+
+        <button type="submit">Enviar Pedido</button>
+    </form>
+
+    <script>
+        // Lista de productos obtenida de n8n (Simulación, se reemplazará dinámicamente)
+        const productos = [
+            { id: 1, nombre: "Arroz 1kg" },
+            { id: 2, nombre: "Frijol 500g" },
+            { id: 3, nombre: "Aceite 1L" }
+        ];
+
+        const productosLista = document.getElementById("productosLista");
+
+        productos.forEach(producto => {
+            const fila = document.createElement("tr");
+            fila.innerHTML = 
+                <td>${producto.nombre}</td>
+                <td><input type="number" name="producto_${producto.id}" min="0" value="0"></td>
+            ;
+            productosLista.appendChild(fila);
+        });
+
+        document.getElementById("pedidoForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(this);
+            const pedido = {};
+
+            formData.forEach((value, key) => {
+                if (parseInt(value) > 0) { 
+                    pedido[key] = value;
+                }
+            });
+
+            fetch("https://tuservidor.n8n.com/webhook/recibir-pedido", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(pedido)
+            })
+            .then(response => response.json())
+            .then(data => alert("Pedido enviado con éxito"))
+            .catch(error => console.error("Error:", error));
+        });
+    </script>
+
+</body>
+</html>  
