@@ -25,7 +25,9 @@
                     <th>Cantidad</th>
                 </tr>
             </thead>
-            <tbody id="productosLista"></tbody>
+            <tbody id="productosLista">
+                <!-- Aquí se llenarán los productos dinámicamente -->
+            </tbody>
         </table>
 
         <button type="submit">Enviar Pedido</button>
@@ -43,7 +45,7 @@
             }
 
             // Hacer una solicitud a n8n para obtener los productos del almacén
-            fetch(`https://diconsaparsmart.sytes.net/webhook/get-productos?almacen=${almcve}`)
+            fetch(`https://diconsaparsmart.sytes.net/webhook/5d12349c-01ee-4e77-a5c5-e24f54530a3c?almacen=${almcve}`)
                 .then(response => response.json())
                 .then(data => {
                     const productosLista = document.getElementById("productosLista");
