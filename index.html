@@ -32,7 +32,11 @@
     </form>
 
     <script>
-        // Lista de productos obtenida de n8n (Simulación, se reemplazará dinámicamente)
+        // Obtener el almacén desde la URL
+        const params = new URLSearchParams(window.location.search);
+        const almacen = params.get("almacen") || "No especificado"; // Captura el almacén de la URL
+
+        // Lista de productos (Simulación, esto debe venir desde n8n)
         const productos = [
             { id: 1, nombre: "Arroz 1kg" },
             { id: 2, nombre: "Frijol 500g" },
@@ -43,10 +47,10 @@
 
         productos.forEach(producto => {
             const fila = document.createElement("tr");
-            fila.innerHTML = 
+            fila.innerHTML = `
                 <td>${producto.nombre}</td>
                 <td><input type="number" name="producto_${producto.id}" min="0" value="0"></td>
-            ;
+            `;
             productosLista.appendChild(fila);
         });
 
@@ -54,24 +58,34 @@
             event.preventDefault();
             
             const formData = new FormData(this);
-            const pedido = {};
+            const pedido = {
+                almacen: almacen,  // Agregamos el almacén seleccionado
+                productos: {}
+            };
 
             formData.forEach((value, key) => {
                 if (parseInt(value) > 0) { 
-                    pedido[key] = value;
+                    pedido.productos[key] = value;
                 }
             });
 
-            fetch("https://tuservidor.n8n.com/webhook/recibir-pedido", {
+            if (Object.keys(pedido.productos).length === 0) {
+                alert("Por favor, selecciona al menos un producto.");
+                return;
+            }
+
+            fetch("https://diconsaparsmart.sytes.net/webhook/5d12349c-01ee-4e77-a5c5-e24f54530a3c", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(pedido)
             })
             .then(response => response.json())
-            .then(data => alert("Pedido enviado con éxito"))
+            .then(data => {
+                alert("Pedido enviado con éxito");
+            })
             .catch(error => console.error("Error:", error));
         });
     </script>
 
 </body>
-</html>  
+</html>
