@@ -32,34 +32,47 @@
     </form>
 
     <script>
-        // Obtener el almacén desde la URL
-        const params = new URLSearchParams(window.location.search);
-        const almacen = params.get("almacen") || "No especificado"; // Captura el almacén de la URL
+        document.addEventListener("DOMContentLoaded", function() {
+            // Obtener el almacén desde la URL
+            const params = new URLSearchParams(window.location.search);
+            const almcve = params.get("almacen");
 
-        // Lista de productos (Simulación, esto debe venir desde n8n)
-        const productos = [
-            { id: 1, nombre: "Arroz 1kg" },
-            { id: 2, nombre: "Frijol 500g" },
-            { id: 3, nombre: "Aceite 1L" }
-        ];
+            if (!almcve) {
+                alert("Error: No se encontró un almacén válido en la URL.");
+                return;
+            }
 
-        const productosLista = document.getElementById("productosLista");
+            // Hacer una solicitud a n8n para obtener los productos del almacén
+            fetch(`https://diconsaparsmart.sytes.net/webhook/get-productos?almacen=${almcve}`)
+                .then(response => response.json())
+                .then(data => {
+                    const productosLista = document.getElementById("productosLista");
+                    productosLista.innerHTML = ""; // Limpiar la tabla antes de agregar los productos
 
-        productos.forEach(producto => {
-            const fila = document.createElement("tr");
-            fila.innerHTML = `
-                <td>${producto.nombre}</td>
-                <td><input type="number" name="producto_${producto.id}" min="0" value="0"></td>
-            `;
-            productosLista.appendChild(fila);
+                    if (data.length === 0) {
+                        productosLista.innerHTML = "<tr><td colspan='2'>No hay productos disponibles para este almacén.</td></tr>";
+                        return;
+                    }
+
+                    data.forEach(producto => {
+                        const fila = document.createElement("tr");
+                        fila.innerHTML = `
+                            <td>${producto.artdesc}</td>
+                            <td><input type="number" name="producto_${producto.artdesc}" min="0" value="0"></td>
+                        `;
+                        productosLista.appendChild(fila);
+                    });
+                })
+                .catch(error => console.error("Error al obtener productos:", error));
         });
 
+        // Enviar pedido
         document.getElementById("pedidoForm").addEventListener("submit", function(event) {
             event.preventDefault();
             
             const formData = new FormData(this);
             const pedido = {
-                almacen: almacen,  // Agregamos el almacén seleccionado
+                almcve: new URLSearchParams(window.location.search).get("almacen"),
                 productos: {}
             };
 
@@ -74,15 +87,13 @@
                 return;
             }
 
-            fetch("https://diconsaparsmart.sytes.net/webhook/5d12349c-01ee-4e77-a5c5-e24f54530a3c", {
+            fetch("https://diconsaparsmart.sytes.net/webhook/recibir-pedido", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(pedido)
             })
             .then(response => response.json())
-            .then(data => {
-                alert("Pedido enviado con éxito");
-            })
+            .then(data => alert("Pedido enviado con éxito"))
             .catch(error => console.error("Error:", error));
         });
     </script>
